@@ -71,53 +71,57 @@ class SampleQCCombiner(val keepStar: Boolean) extends Serializable {
 
   def merge(v: Variant, ACs: Array[Int], g: Genotype): SampleQCCombiner = {
 
-    g.gt match {
+    if (g == null)
+      nNotCalled += 1
+    else
+      Genotype.gt(g) match {
 
-      case Some(0) =>
-        nHomRef += 1
+        case Some(0) =>
+          nHomRef += 1
 
-      case Some(gt) =>
-        val nonRefAlleleIndices = Genotype.gtPair(gt).alleleIndices.filter(i => i > 0 && (keepStar || !v.altAlleles(i - 1).isStar))
+        case Some(gt) =>
+          val nonRefAlleleIndices = Genotype.gtPair(gt).alleleIndices.filter(i => i > 0 && (keepStar || !v.altAlleles(i - 1).isStar))
 
-        if (!nonRefAlleleIndices.isEmpty) {
-          nonRefAlleleIndices.foreach({
-            ai =>
-              val altAllele = v.altAlleles(ai - 1)
-              if (altAllele.isSNP) {
-                nSNP += 1
-                if (altAllele.isTransition)
-                  nTi += 1
-                else {
-                  assert(altAllele.isTransversion)
-                  nTv += 1
-                }
-              } else if (altAllele.isInsertion)
-                nIns += 1
-              else if (altAllele.isDeletion)
-                nDel += 1
+          if (!nonRefAlleleIndices.isEmpty) {
+            nonRefAlleleIndices.foreach({
+              ai =>
+                val altAllele = v.altAlleles(ai - 1)
+                if (altAllele.isSNP) {
+                  nSNP += 1
+                  if (altAllele.isTransition)
+                    nTi += 1
+                  else {
+                    assert(altAllele.isTransversion)
+                    nTv += 1
+                  }
+                } else if (altAllele.isInsertion)
+                  nIns += 1
+                else if (altAllele.isDeletion)
+                  nDel += 1
 
-              if (ACs(ai - 1) == 1)
-                nSingleton += 1
-          })
+                if (ACs(ai - 1) == 1)
+                  nSingleton += 1
+            })
 
-          if (nonRefAlleleIndices.length == 1 || nonRefAlleleIndices(0) != nonRefAlleleIndices(1))
-            nHet += 1
-          else
-            nHomVar += 1
-        }
-      case None =>
-        nNotCalled += 1
+            if (nonRefAlleleIndices.length == 1 || nonRefAlleleIndices(0) != nonRefAlleleIndices(1))
+              nHet += 1
+            else
+              nHomVar += 1
+          }
+        case None =>
+          nNotCalled += 1
 
-    }
+      }
 
-    if (g.isCalled) {
-      g.dp.foreach { v =>
+    if (Genotype.isCalled(g)) {
+      Genotype.dp(g).foreach { v =>
         dpSC.merge(v)
       }
-      g.gq.foreach { v =>
+      Genotype.gq(g).foreach { v =>
         gqSC.merge(v)
       }
     }
+
     this
   }
 
@@ -237,7 +241,7 @@ object SampleQC {
 
             val ACs = gs.foldLeft(Array.fill(v.nAltAlleles)(0))({
               case (acc, g) =>
-                g.gt
+                Genotype.gt(g)
                   .filter(_ > 0)
                   .foreach(call => Genotype.gtPair(call).alleleIndices.filter(_ > 0).foreach(x => acc(x - 1) += 1)
                   )
