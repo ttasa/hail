@@ -2,7 +2,9 @@
 
 [![Gitter](https://badges.gitter.im/hail-is/hail.svg)](https://gitter.im/hail-is/hail?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) [![CI Status](https://ci.hail.is/app/rest/builds/buildType:(id:HailSourceCode_HailCi)/statusIcon)](https://ci.hail.is/viewType.html?buildTypeId=HailSourceCode_HailCi&branch_HailSourceCode_HailMainline=%3Cdefault%3E&tab=buildTypeStatusDiv)
 
-[Hail](https://hail.is) is an open-source, scalable framework for exploring and analyzing genomic data. Starting from sequencing or microarray data in [VCF](https://samtools.github.io/hts-specs/VCFv4.2.pdf) and [other formats](https://hail.is/hail/hail.HailContext.html#hail.HailContext), Hail can, for example:
+[Hail](https://hail.is) is an open-source, scalable framework for exploring and analyzing genomic data. The Hail project began in Fall 2015 to [harness the flood of genomic data](https://www.broadinstitute.org/blog/harnessing-flood-scaling-data-science-big-genomics-era) and is under very active development. Hail has been the primary analysis platform for dozens of major studies and is the core analysis platform of large-scale genomics efforts such as [gnomAD](http://gnomad.broadinstitute.org/).
+
+Starting from sequencing or microarray data in [VCF](https://samtools.github.io/hts-specs/VCFv4.2.pdf) and [other formats](https://hail.is/hail/hail.HailContext.html#hail.HailContext), Hail can, for example:
 
  - generate variant annotations like call rate, Hardy-Weinberg equilibrium p-value, and population-specific allele count
  - generate sample annotations like mean depth, imputed sex, and TiTv ratio
@@ -12,8 +14,6 @@
  - perform variant, gene-burden and eQTL association analyses using linear, logistic, and linear mixed regression, and estimate heritability
 
 This functionality and more is exposed through **[Python](https://www.python.org/)** and backed by distributed algorithms built on top of **[Apache Spark](http://spark.apache.org/)** to efficiently analyze gigabyte-scale data on a laptop or terabyte-scale data on a cluster, without the need to manually chop up data or manage job failures. Hail also provides a flexible domain language to express complex quality control and analysis pipelines with concise, readable code.
-
-The Hail project began in Fall 2015 to [harness the flood of genomic data](https://www.broadinstitute.org/blog/harnessing-flood-scaling-data-science-big-genomics-era) and is under very active development. Hail has been the primary analysis platform for dozens of major studies and is the core analysis platform of large-scale genomics efforts such as [gnomAD](http://gnomad.broadinstitute.org/).
 
 Want to get involved in development? Check out the [Github repo](https://github.com/hail-is/hail), chat with us in the [Gitter dev room](https://gitter.im/hail-is/hail-dev), and view our talks at [Spark Summit East](https://spark-summit.org/east-2017/events/scaling-genetic-data-analysis-with-apache-spark/) and [Spark Summit West](https://spark-summit.org/2017/events/scaling-genetic-data-analysis-with-apache-spark/) (below). Or **come join us full-time** at the [Broad Institute of MIT and Harvard](https://www.broadinstitute.org/)! We've founded a new Initiative in Scalable Analytics and are recruiting **software engineers** at multiple levels of experience. Details [here](https://www.linkedin.com/jobs/view/316818823/).
 
