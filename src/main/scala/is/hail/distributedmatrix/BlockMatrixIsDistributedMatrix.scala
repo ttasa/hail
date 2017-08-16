@@ -1,4 +1,4 @@
-package is.hail.distributedmatrix
+package BlockMatrixMultiplyRDD
 
 import is.hail._
 import is.hail.utils._
@@ -10,6 +10,7 @@ import org.apache.hadoop.io._
 import java.io._
 import org.json4s._
 import java.net._
+import is.hail.distributedmatrix.DistributedMatrix
 
 import scala.reflect.ClassTag
 

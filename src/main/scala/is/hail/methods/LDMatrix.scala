@@ -2,6 +2,7 @@ package is.hail.methods
 
 import is.hail.HailContext
 import is.hail.distributedmatrix.{BlockMatrixIsDistributedMatrix, DistributedMatrix}
+import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import is.hail.stats.RegressionUtils
 import is.hail.utils._
 import is.hail.variant.{Variant, VariantDataset}

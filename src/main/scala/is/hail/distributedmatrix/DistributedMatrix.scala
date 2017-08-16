@@ -1,5 +1,6 @@
 package is.hail.distributedmatrix
 
+import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.linalg.distributed._
