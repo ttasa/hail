@@ -25,7 +25,8 @@ import is.hail.stats._
 import is.hail.utils.{TextTableReader, _}
 
 import scala.sys.process._
-import is.hail.distributedmatrix.{BlockMatrixIsDistributedMatrix, DistributedMatrix}
+import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
+import is.hail.distributedmatrix.DistributedMatrix
 import is.hail.distributedmatrix.DistributedMatrix.implicits._
 
 class PCRelateSuite extends SparkSuite {

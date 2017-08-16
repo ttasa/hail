@@ -7,7 +7,7 @@ import is.hail.expr.{TStruct, TString, TFloat64}
 import is.hail.utils._
 import is.hail.keytable.KeyTable
 import is.hail.variant.{Variant, VariantDataset}
-import is.hail.distributedmatrix.BlockMatrixIsDistributedMatrix
+import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.linalg.distributed._

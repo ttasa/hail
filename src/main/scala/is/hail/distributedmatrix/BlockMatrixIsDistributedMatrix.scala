@@ -1,10 +1,11 @@
-package is.hail.distributedmatrix
+package BlockMatrixMultiplyRDD
 
 import is.hail.utils._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.linalg.distributed._
+import is.hail.distributedmatrix.DistributedMatrix
 
 import scala.reflect.ClassTag
 

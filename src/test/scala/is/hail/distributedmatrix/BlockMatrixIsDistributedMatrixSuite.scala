@@ -6,7 +6,7 @@ import is.hail.check.Gen._
 import is.hail.check._
 import is.hail.utils._
 import is.hail.SparkSuite
-
+import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import breeze.linalg.{DenseMatrix => BDM, DenseVector => BDV, _}
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.linalg.distributed._
