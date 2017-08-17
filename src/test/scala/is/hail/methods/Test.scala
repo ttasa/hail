@@ -19,13 +19,6 @@ object Test {
 
   def main(args: Array[String]): Unit = {
 
-    //val data = Array(1, 2, 3, 4, 5,6,7,8,9,10)
-    //val distData = hc.sc.parallelize(data)
-    val distData = hc.sc.textFile("Text.txt")
-    val Lenght = distData.flatMap(s => s.split(" ")).map(word => (word, 1)).reduceByKey(_ + _).collect()
-    //    print(Lenght.foreach(println))
-    //  println('2')
-
     val BA = hc.sqlContext.read.option("header", "true").option("inferSchema", "true").csv("SolveBA.csv")
 
     val A = FailOps.open_("SolveA.csv")

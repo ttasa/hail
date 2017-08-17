@@ -477,7 +477,6 @@ class VariantDatasetFunctions(private val vds: VariantDataset) extends AnyVal {
   def mendelErrors(ped: Pedigree): (KeyTable, KeyTable, KeyTable, KeyTable) = {
     requireSplit("mendel errors")
     vds.requireSampleTString("mendel errors")
-
     val men = MendelErrors(vds, ped.filterTo(vds.stringSampleIdSet).completeTrios)
 
     (men.mendelKT(), men.fMendelKT(), men.iMendelKT(), men.lMendelKT())

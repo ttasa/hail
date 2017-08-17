@@ -10,6 +10,8 @@ import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 import org.apache.spark.mllib.linalg.Vectors.dense
 import org.apache.spark.mllib.optimization.{LBFGS, SimpleUpdater}
 import splash.optimization.LeastSquaresGradient
+import java.io.File
+import breeze.linalg.csvread
 
 /**
   * Created by ttasa on 07/07/2017.
@@ -17,11 +19,11 @@ import splash.optimization.LeastSquaresGradient
   * Tegevused implementatsioonil
   *
   * ### 1) Data generation (X.re, X.fe, y):
-  * ####
+  *
   * #### 1.1 Alguses loeme R'st v2lja kirjutatud andmed niisama sisse.
   * #### 2)  Implementation of the actual algorithm
   * #### 3) Data generation (Not needed)
-  * ##
+  *
   * ---Results
   * #### 3)SGD for lin. solve /LBFGS
   * #### 4)Matrix multiplication..
@@ -29,19 +31,28 @@ import splash.optimization.LeastSquaresGradient
   * KOLMAP2EV:
   * Integreeri õigetre andme struktuuridega.
   * 5)Integration with Scala/Spark/Hail and other data structures
-  *
+  *  object FailOps {
+
   * 6)Test suite
+  *    def open_ (filename : String): DenseMatrix[Double] = {
+      val matrix = breeze.linalg.csvread(new File(filename),skipLines = 1)
+      matrix
+    }
+
   */
 
 
 object Hello {
 
-  val X_fe = FailOps.open_("Test.Xfe.csv")
+ // val X_fe = FailOps.open_("Test.Xfe.csv")
+ val X_fe = FailOps.open_("Test.Xfe.csv")
   val X_re = FailOps.open_("Test.Xre.csv")
   val y = FailOps.open_("Test.y.csv")
   val phi = 0.007
   val c=1.0
   val inc_m = false
+
+
 
   def main(args: Array[String]): Unit = {
 

@@ -113,3 +113,14 @@ object ToHWENormalizedIndexedRowMatrix {
   }
 
 }
+
+object ToNormalizedDenseMatrix {
+  def apply(vds: VariantDataset): DenseMatrix[Double] = {
+    require(vds.wasSplit)
+    val n = vds.nSamples
+    val rows = vds.rdd.flatMap { case (v, (va, gs)) => RegressionUtils.normalizedHardCalls(gs, n) }
+    val flattened = rows.collect().flatten
+    val m = rows.count().toInt
+    new DenseMatrix[Double](n, m, flattened)
+  }
+}
