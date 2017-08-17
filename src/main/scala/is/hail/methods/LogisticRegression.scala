@@ -11,16 +11,16 @@ import org.apache.spark.rdd.RDD
 object LogisticRegression {
 
   def apply(vds: VariantDataset,
-    test: String,
-    yExpr: String,
-    covExpr: Array[String],
-    root: String,
-    useDosages: Boolean): VariantDataset = {
+            test: String,
+            yExpr: String,
+            covExpr: Array[String],
+            root: String,
+            useDosages: Boolean): VariantDataset = {
 
     require(vds.wasSplit)
 
     val logRegTest = LogisticRegressionTest.tests.getOrElse(test,
-      fatal(s"Supported tests are ${ LogisticRegressionTest.tests.keys.mkString(", ") }, got: $test"))
+      fatal(s"Supported tests are ${LogisticRegressionTest.tests.keys.mkString(", ")}, got: $test"))
 
     val (y, cov, completeSamples) = RegressionUtils.getPhenoCovCompleteSamples(vds, yExpr, covExpr)
     val completeSamplesSet = completeSamples.toSet
@@ -37,9 +37,9 @@ object LogisticRegression {
     val d = n - k - 1
 
     if (d < 1)
-      fatal(s"$n samples and $k ${ plural(k, "covariate") } including intercept implies $d degrees of freedom.")
+      fatal(s"$n samples and $k ${plural(k, "covariate")} including intercept implies $d degrees of freedom.")
 
-    info(s"Running $test logistic regression on $n samples with $k ${ plural(k, "covariate") } including intercept...")
+    info(s"Running $test logistic regression on $n samples with $k ${plural(k, "covariate")} including intercept...")
 
     val nullModel = new LogisticRegressionModel(cov, y)
     val nullFit = nullModel.fit()
@@ -47,7 +47,7 @@ object LogisticRegression {
     if (!nullFit.converged)
       fatal("Failed to fit logistic regression null model (MLE with covariates only): " + (
         if (nullFit.exploded)
-          s"exploded at Newton iteration ${ nullFit.nIter }"
+          s"exploded at Newton iteration ${nullFit.nIter}"
         else
           "Newton iteration failed to converge"))
 
@@ -62,12 +62,12 @@ object LogisticRegression {
     val pathVA = Parser.parseAnnotationRoot(root, Annotation.VARIANT_HEAD)
     val (newVAS, inserter) = vds.insertVA(logRegTest.schema, pathVA)
 
-    vds.copy(rdd = vds.rdd.mapPartitions( { it =>
-      val  missingSamples = new ArrayBuilder[Int]()
+    vds.copy(rdd = vds.rdd.mapPartitions({ it =>
+      val missingSamples = new ArrayBuilder[Int]()
 
       val X = XBc.value.copy
       it.map { case (v, (va, gs)) =>
-        val x: Vector[Double] = 
+        val x: Vector[Double] =
           if (!useDosages)
             RegressionUtils.hardCalls(gs, n, sampleMaskBc.value)
           else
@@ -77,7 +77,7 @@ object LogisticRegression {
 
         // constant checking to be removed in 0.2
         val nonConstant = useDosages || !RegressionUtils.constantVector(x)
-        
+
         val logregAnnot = if (nonConstant) logRegTestBc.value.test(X, yBc.value, nullFitBc.value).toAnnotation else null
         val newAnnotation = inserter(va, logregAnnot)
         assert(newVAS.typeCheck(newAnnotation))

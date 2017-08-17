@@ -271,4 +271,5 @@ object BlockMatrixIsDistributedMatrix extends DistributedMatrix[BlockMatrix] {
   def toBlockRdd(m: M): RDD[((Int, Int), Matrix)] = m.blocks
 
   def toLocalMatrix(m: M): Matrix = m.toLocalMatrix()
+
 }
