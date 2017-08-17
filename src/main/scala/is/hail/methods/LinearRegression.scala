@@ -98,7 +98,6 @@ object LinearRegression {
           }
 
           val se = sqrt(dRec * (yyp * xxpRec.t - (b :* b)))
-
           val t = b :/ se
           val p = t.map(s => 2 * T.cumulative(-math.abs(s), d, true, false))
 

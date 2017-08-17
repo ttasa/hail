@@ -17,7 +17,7 @@ object Optimisation {
   val regParam = 0
 
 
-  def apply(dataPrepOptParallel: RDD[(Double, Vector)], algorithm: String,coefficients:Vector): Vector = algorithm match {
+  def apply(dataPrepOptParallel: RDD[(Double, Vector)], algorithm: String, coefficients: Vector): Vector = algorithm match {
 
     case "LBFGS" => {
       val coefficientUpdate = LBFGS.runLBFGS(
@@ -49,8 +49,5 @@ object Optimisation {
 
   }
 }
-//case class Optimisation(vec : Vector)
-
-
 
 
