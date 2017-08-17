@@ -4,7 +4,7 @@ import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import is.hail.stats.ToNormalizedDenseMatrix
 import is.hail.SparkSuite.hc
 import is.hail.distributedmatrix.DistributedMatrix
-import is.hail.expr.TFloat64
+import is.hail.expr.{Parser, TArray, TBoolean, TDict, TFloat64, TInt32, TString, TStruct, Type}
 import is.hail.stats.RegressionUtils
 import is.hail.distributedmatrix.DistributedMatrix.implicits._
 import org.apache.spark.mllib.linalg.distributed.{BlockMatrix, IndexedRow, IndexedRowMatrix, RowMatrix}
@@ -12,6 +12,7 @@ import is.hail.utils.richUtils.RichIndexedRowMatrix
 import is.hail.variant.VariantDataset
 import breeze.linalg._
 import breeze.numerics.{abs, tanh}
+import is.hail.annotations.Annotation
 import org.apache.spark.mllib.linalg.Vectors
 import splash.optimization.LeastSquaresGradient
 import org.apache.spark.mllib.optimization.{LBFGS, SimpleUpdater}
@@ -24,6 +25,13 @@ object ReadTxt {
   //phi //c will be parameters
   val phi = 0.007
   val c = 1.0
+
+  val schema: Type = TStruct(
+    ("beta", TFloat64),
+    ("sigmaG2", TFloat64),
+    ("chi2", TFloat64),
+    ("pval", TFloat64))
+
 
   def toBM(x: DenseMatrix[Double], rowsPerBlock: Int, colsPerBlock: Int): BlockMatrix =
     BlockMatrixIsDistributedMatrix.from(hc.sc, new org.apache.spark.mllib.linalg.DenseMatrix(x.rows, x.cols, x.toArray), rowsPerBlock, colsPerBlock)
@@ -134,22 +142,36 @@ object ReadTxt {
       )
 
       val dataPrepOptParallel = hc.sc.parallelize(dataPrepOptimise)
-
-      val coefficientUpdate = Optimisation(dataPrepOptParallel, "LBFsGS", coefficients)
-
+      val coefficientUpdate = Optimisation(dataPrepOptParallel, "LBFGS", coefficients)
       coefficients = coefficientUpdate.copy
       dbm = new DenseVector[Double](coefficientUpdate.toArray)
       print(dbm(0 to 3))
       // dbm = (tmp_A \ tmp_B).toDenseVector
-
       // dbm = ((S2 + i_PP) \ (X_t * k + i_PP * mu)).toDenseVector
-
     }
+    //Siia
+    val rootGA: String = "global.logmmreg"
+    val rootVA: String = "va.logmmreg"
 
-    print(dbm)
-    // PP(b_idc, b_idc)
+    val pathVA = Parser.parseAnnotationRoot(rootVA, Annotation.VARIANT_HEAD)
+    Parser.validateAnnotationRoot(rootGA, Annotation.GLOBAL_HEAD)
+    //Tee lmmreg'i j2rgi VariantDatasSet function
+    val covExpr: Array[String] = Array("cov2", "cov3")
+    val covNames = "intercept" +: covExpr
+    //globalB == DenseVector[Double]
+    val globalBetaMap = covNames.zip(dbm.toArray).toMap
+    val vds1 = vds_result.annotateGlobal(
+      Annotation(dbm, phi, c),
+      TStruct(("beta", TDict(TString, TFloat64)), ("phi", TFloat64), ("c", TFloat64)), rootGA)
+    if (runAssoc) {
 
+    //Likelihood ratio test based on global beta and fixed effect design matrix
+      //Currently replaced with Variant dataset vds2
+      vds2
 
+    } else {
+      vds2
+    }
   }
 
 }

@@ -16,6 +16,7 @@ import org.apache.commons.math3.optim.univariate.{BrentOptimizer, SearchInterval
 import org.apache.commons.math3.util.FastMath
 
 object LinearMixedRegression {
+
   val schema: Type = TStruct(
     ("beta", TFloat64),
     ("sigmaG2", TFloat64),
