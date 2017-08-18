@@ -9,13 +9,13 @@ import org.apache.spark.mllib.optimization.{LBFGS, SimpleUpdater}
   * Created by ttasa on 17/08/2017.
   */
 object Optimisation {
+
   val numIterations = 200
   val stepSize = 0.0005
   val numCorrections = 200
   val convergenceTol = 1e-7
   val maxNumIterations = 1000
   val regParam = 0
-
 
   def apply(dataPrepOptParallel: RDD[(Double, Vector)], algorithm: String, coefficients: Vector): Vector = algorithm match {
 

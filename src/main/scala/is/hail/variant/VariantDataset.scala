@@ -474,11 +474,12 @@ class VariantDatasetFunctions(private val vds: VariantDataset) extends AnyVal {
                rootVA: String = "va.logmmreg",
                runAssoc: Boolean = false,
                phi: Double = 0.007,
-                 c: Double = 1.0
+               c: Double = 1.0,
+               optMethod: String = "LBFGS"
+              ): VariantDataset = {
 
-  ): VariantDataset = {
     requireSplit("logistic mixed regression")
-    LogisticMixedRegression(vds, y, covariates, rootGA, rootVA, runAssoc, phi, c)
+    LogisticMixedRegression(vds, y, covariates, rootGA, rootVA, runAssoc, phi, c, optMethod)
   }
 
   def logregBurden(keyName: String, variantKeys: String, singleKey: Boolean, aggExpr: String, test: String, y: String, covariates: Array[String] = Array.empty[String]): (KeyTable, KeyTable) = {

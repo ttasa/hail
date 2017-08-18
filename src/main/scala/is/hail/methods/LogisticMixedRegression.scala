@@ -28,7 +28,8 @@ object LogisticMixedRegression {
             rootVA: String,
             runAssoc: Boolean = false,
             phi: Double = 0.007,
-            c: Double = 1
+            c: Double = 1,
+            optMethod: String = "LBFGS"
            ): VariantDataset = {
 
     //This will go into TestSuite Class
@@ -121,9 +122,7 @@ object LogisticMixedRegression {
 
       var S2 = new DenseMatrix[Double](S.numRows, S.numCols, S.toArray)
       beta_old := dbm
-      // Solve
       //with SGD
-
       // Data preparation
 
       var systemColumn: DenseMatrix[Double] = (X_t * k + i_PP * mu)
@@ -137,7 +136,7 @@ object LogisticMixedRegression {
       )
 
       val dataPrepOptParallel = vds_result.sparkContext.parallelize(dataPrepOptimise)
-      val coefficientUpdate = Optimisation(dataPrepOptParallel, "LBFGS", coefficients)
+      val coefficientUpdate = Optimisation(dataPrepOptParallel, optMethod, coefficients)
       coefficients = coefficientUpdate.copy
       dbm = new DenseVector[Double](coefficientUpdate.toArray)
       print(dbm(0 to 3))
@@ -158,14 +157,11 @@ object LogisticMixedRegression {
 
     //runassoc insted of true
     if (false) {
-
       //Likelihood ratio test based on global beta and fixed effect design matrix
       //Currently replaced with Variant dataset vds2
       vds1
-
     } else {
       vds1
     }
   }
-
 }
