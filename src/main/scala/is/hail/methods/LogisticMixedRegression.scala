@@ -1,64 +1,60 @@
 package is.hail.methods
 
 import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
-import is.hail.stats.ToNormalizedDenseMatrix
-import is.hail.SparkSuite.hc
-import is.hail.distributedmatrix.DistributedMatrix
-import is.hail.expr.{Parser, TArray, TBoolean, TDict, TFloat64, TInt32, TString, TStruct, Type}
-import is.hail.stats.RegressionUtils
-import is.hail.distributedmatrix.DistributedMatrix.implicits._
-import org.apache.spark.mllib.linalg.distributed.{BlockMatrix, IndexedRow, IndexedRowMatrix, RowMatrix}
-import is.hail.utils.richUtils.RichIndexedRowMatrix
-import is.hail.variant.VariantDataset
 import breeze.linalg._
 import breeze.numerics.{abs, tanh}
 import is.hail.annotations.Annotation
+import is.hail.expr.{Parser, TDict, TFloat64, TString, TStruct, Type}
+import is.hail.stats.{RegressionUtils, ToNormalizedDenseMatrix}
+import is.hail.variant.VariantDataset
 import org.apache.spark.mllib.linalg.Vectors
-import splash.optimization.LeastSquaresGradient
-import org.apache.spark.mllib.optimization.{LBFGS, SimpleUpdater}
+import org.apache.spark.mllib.linalg.distributed.BlockMatrix
 
 /**
   * Created by ttasa on 16/08/2017.
   */
 
-object ReadTxt {
-  //phi //c will be parameters
-  val phi = 0.007
-  val c = 1.0
+object LogisticMixedRegression {
 
-  val schema: Type = TStruct(
-    ("beta", TFloat64),
-    ("sigmaG2", TFloat64),
-    ("chi2", TFloat64),
-    ("pval", TFloat64))
+  val schema: Type = TStruct(("beta", TDict(TString, TFloat64)), ("phi", TFloat64), ("c", TFloat64))
 
+  def toBM(x: DenseMatrix[Double], rowsPerBlock: Int, colsPerBlock: Int,vds_result : VariantDataset): BlockMatrix =
+    BlockMatrixIsDistributedMatrix.from(vds_result.sparkContext, new org.apache.spark.mllib.linalg.DenseMatrix(x.rows, x.cols, x.toArray), rowsPerBlock, colsPerBlock)
 
-  def toBM(x: DenseMatrix[Double], rowsPerBlock: Int, colsPerBlock: Int): BlockMatrix =
-    BlockMatrixIsDistributedMatrix.from(hc.sc, new org.apache.spark.mllib.linalg.DenseMatrix(x.rows, x.cols, x.toArray), rowsPerBlock, colsPerBlock)
+  def apply(vds_result: VariantDataset,
+            yExpr: String,
+            covExpr: Array[String],
+            rootGA: String,
+            rootVA: String,
+            runAssoc: Boolean = false,
+            phi: Double = 0.007,
+            c: Double = 1
+           ): VariantDataset = {
 
-  //  val X_ae = hc.importGen("gen.gen","samp.samp") .write("SampleData.vds")
-
-  def main(args: Array[String]): Unit = {
-    val SampleData = hc.read("XX.vds").annotateGenotypesExpr("g = g.GT.toGenotype()").toVDS
+    //This will go into TestSuite Class
     //
-    ///MIKS Gen faili sisse lugedes automaatselt sampleid ei annoteerita.
+    ///Yhy aren't samples automatically annotated when gen files are read in...
     //
-    val annotations = hc.importTable(input = "samp.annot", keyNames = Array("ID_1"), types = Map("pheno1" -> TFloat64, "cov2" -> TFloat64, "cov3" -> TFloat64))
-    val vds_result = SampleData.annotateSamplesTable(annotations, root = "sa.phenotypes")
-    val (y, cov, completeSamples) = RegressionUtils.getPhenosCovCompleteSamples(vds_result, Array("sa.phenotypes.pheno1 "), Array("sa.phenotypes.cov2 ", "sa.phenotypes.cov3 "))
+    //  val X_ae = hc.importGen("gen.gen","samp.samp") .write("SampleData.vds")
+  //  val SampleData = hc.read("XX.vds").annotateGenotypesExpr("g = g.GT.toGenotype()").toVDS
+  //  val annotations = hc.importTable(input = "samp.annot", keyNames = Array("ID_1"), types = Map("pheno1" -> TFloat64, "cov2" -> TFloat64, "cov3" -> TFloat64))
+   // val vds_result = SampleData.annotateSamplesTable(annotations, root = "sa.phenotypes")
+   // val (y, cov, completeSamples) = RegressionUtils.getPhenosCovCompleteSamples(vds_result, Array("sa.phenotypes.pheno1 "), Array("sa.phenotypes.cov2 ", "sa.phenotypes.cov3 "))
+
+
+    val (y, cov, completeSamples) = RegressionUtils.getPhenoCovCompleteSamples(vds_result, yExpr,covExpr)
 
     //Selle asemel on mul BreezeMatrixit vaja.//Sain
+
     val XKinship = ToNormalizedDenseMatrix(vds_result)
-
-
     val incIntercept = false
 
     val covRows = cov.rows
     val P0 = diag(DenseVector.fill(covRows) {
       c
     })
-    val k = y - 0.5
 
+    val k = (y - 0.5).toDenseMatrix.t
 
     val X: DenseMatrix[Double] = {
       if (incIntercept) {
@@ -102,8 +98,8 @@ object ReadTxt {
     val i_PP: DenseMatrix[Double] = inv(PP)
     val X_t = X.t
 
-    val BM_X_t: BlockMatrix = toBM(X_t, 1024, 1024)
-    val BM_X: BlockMatrix = toBM(X, 1024, 1024)
+    val BM_X_t: BlockMatrix = toBM(X_t, 1024, 1024, vds_result)
+    val BM_X: BlockMatrix = toBM(X, 1024, 1024, vds_result)
 
     val numIterations = 500
     val stepSize = 0.00005
@@ -138,10 +134,9 @@ object ReadTxt {
       // print (Vectors.dense(tmp_A(::, 1).data))
       val dataPrepOptimise = (0 to it).map(index => (systemColumn(index, 0),
         Vectors.dense((systemDesign(::, index)).toArray))
-
       )
 
-      val dataPrepOptParallel = hc.sc.parallelize(dataPrepOptimise)
+      val dataPrepOptParallel = vds_result.sparkContext.parallelize(dataPrepOptimise)
       val coefficientUpdate = Optimisation(dataPrepOptParallel, "LBFGS", coefficients)
       coefficients = coefficientUpdate.copy
       dbm = new DenseVector[Double](coefficientUpdate.toArray)
@@ -150,27 +145,26 @@ object ReadTxt {
       // dbm = ((S2 + i_PP) \ (X_t * k + i_PP * mu)).toDenseVector
     }
     //Siia
-    val rootGA: String = "global.logmmreg"
-    val rootVA: String = "va.logmmreg"
 
     val pathVA = Parser.parseAnnotationRoot(rootVA, Annotation.VARIANT_HEAD)
     Parser.validateAnnotationRoot(rootGA, Annotation.GLOBAL_HEAD)
     //Tee lmmreg'i j2rgi VariantDatasSet function
-    val covExpr: Array[String] = Array("cov2", "cov3")
+   // val covExpr: Array[String] = Array("cov2", "cov3")
     val covNames = "intercept" +: covExpr
-    //globalB == DenseVector[Double]
     val globalBetaMap = covNames.zip(dbm.toArray).toMap
     val vds1 = vds_result.annotateGlobal(
-      Annotation(dbm, phi, c),
-      TStruct(("beta", TDict(TString, TFloat64)), ("phi", TFloat64), ("c", TFloat64)), rootGA)
-    if (runAssoc) {
+      Annotation(globalBetaMap, phi, c),
+      schema, rootGA)
 
-    //Likelihood ratio test based on global beta and fixed effect design matrix
+    //runassoc insted of true
+    if (false) {
+
+      //Likelihood ratio test based on global beta and fixed effect design matrix
       //Currently replaced with Variant dataset vds2
-      vds2
+      vds1
 
     } else {
-      vds2
+      vds1
     }
   }
 
