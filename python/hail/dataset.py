@@ -18,7 +18,8 @@ warnings.filterwarnings(module=__name__, action='once')
 
 vds_type = lazy()
 
-class VariantDataset(HistoryMixin):
+
+class VariantDataset(object):
     """Hail's primary representation of genomic data, a matrix keyed by sample and variant.
 
     Variant datasets may be generated from other formats using the :py:class:`.HailContext` import methods,
@@ -168,7 +169,7 @@ class VariantDataset(HistoryMixin):
     @handle_py4j
     @record_method
     @typecheck_method(expr=oneof(strlike, listof(strlike)),
-               propagate_gq=bool)
+                      propagate_gq=bool)
     def annotate_alleles_expr(self, expr, propagate_gq=False):
         """Annotate alleles with expression.
 
@@ -922,13 +923,14 @@ class VariantDataset(HistoryMixin):
         try:
             f = hadoop_read('gs://annotationdb/ADMIN/annotationdb.sql')
         except FatalError:
-            raise EnvironmentError('Cannot read from Google Storage. Must be running on Google Cloud Platform to use annotation database.')
+            raise EnvironmentError(
+                'Cannot read from Google Storage. Must be running on Google Cloud Platform to use annotation database.')
         else:
             curs = conn.executescript(f.read())
             f.close()
 
         # parameter substitution string to put in SQL query
-        like = ' OR '.join('a.annotation LIKE ?' for i in xrange(2*len(annotations)))
+        like = ' OR '.join('a.annotation LIKE ?' for i in xrange(2 * len(annotations)))
 
         # query to extract path of all needed database files and their respective annotation exprs 
         qry = """SELECT file_path, annotation, file_type, file_element, f.file_id
@@ -966,7 +968,7 @@ class VariantDataset(HistoryMixin):
                 file_exprs[r[0]] = expr
 
         # are there any gene annotations?
-        are_genes = 'gs://annotationdb/gene/gene.kt' in file_exprs #any([x.startswith('gs://annotationdb/gene/') for x in file_exprs])
+        are_genes = 'gs://annotationdb/gene/gene.kt' in file_exprs  # any([x.startswith('gs://annotationdb/gene/') for x in file_exprs])
 
         # subset to VEP annotations
         veps = any([x == 'vep' for x in file_exprs])
@@ -979,7 +981,6 @@ class VariantDataset(HistoryMixin):
 
             # extract 1 gene symbol per variant from VEP annotations if a gene_key parameter isn't provided
             if are_genes:
-
                 # hierarchy of possible variant consequences, from most to least severe
                 csq_terms = [
                     'transcript_ablation',
@@ -1029,7 +1030,7 @@ class VariantDataset(HistoryMixin):
                 #      else just take the first gene/transcript in the subset
                 self = (
                     self
-                    .annotate_variants_expr(
+                        .annotate_variants_expr(
                         """
                         va.gene.most_severe_consequence = 
                             let canonical_consequences = va.vep.transcript_consequences.filter(t => t.canonical == 1).flatMap(t => t.consequence_terms).toSet() in
@@ -1040,7 +1041,7 @@ class VariantDataset(HistoryMixin):
                                 va.vep.most_severe_consequence
                         """
                     )
-                    .annotate_variants_expr(
+                        .annotate_variants_expr(
                         """
                         va.gene.transcript = let tc = va.vep.transcript_consequences.filter(t => t.consequence_terms.toSet.contains(va.gene.most_severe_consequence)) in 
                                              orElse(tc.find(t => t.canonical == 1), tc[0])
@@ -3520,7 +3521,8 @@ class VariantDataset(HistoryMixin):
         :rtype: (:py:class:`.KeyTable`, :py:class:`.KeyTable`)
         """
 
-        r = self._jvdf.logregBurden(key_name, variant_keys, single_key, agg_expr, test, y, jarray(Env.jvm().java.lang.String, covariates))
+        r = self._jvdf.logregBurden(key_name, variant_keys, single_key, agg_expr, test, y,
+                                    jarray(Env.jvm().java.lang.String, covariates))
         logreg_kt = KeyTable(self.hc, r._1())
         sample_kt = KeyTable(self.hc, r._2())
 
@@ -4564,7 +4566,7 @@ class VariantDataset(HistoryMixin):
 
         jvds = self._jvds.naiveCoalesce(max_partitions)
         return VariantDataset(self.hc, jvds)
-    
+
     @handle_py4j
     @record_method
     @typecheck_method(force_block=bool,
@@ -5560,6 +5562,53 @@ class VariantDataset(HistoryMixin):
 
     @handle_py4j
     @record_method
+    @typecheck_method(y=strlike,
+                      cov=listof(strlike),
+                      rootGA=strlike,
+                      rootVA=strlike,
+                      runassoc=bool,
+                      phi=numeric,
+                      c=numeric,
+                      optMethod=strlike)
+    def logmmreg(self, y, cov=[], rootGA="global.logmmreg", rootVA="va.logmmreg", runassoc=False, phi=0.007, c=1.0,
+                 optMethod="LBFGS"):
+        r"""Test each variant for association with phenotypes using logistic mixed model regression.
+
+        **Annotations**
+        With the default root, the following three global annotations are added.
+        The indexing of the array annotations corresponds to that of ``y``.
+
+        - **global.logmmreg.beta** (*Array[Double]*) -- fixed and random effect estimated coefficients
+        - **global.logmmreg.phi** (*Double*) -- Additive genetic variance
+        - **global.logmmreg.c** (*Double*) -- Fixed effect variance
+
+        :param y: list of one or more response expressions.
+        :type y: str
+
+        :param cov: list of covariate expressions.
+        :type cov: list of str
+
+        :param str rootGA: Global annotation path to store result of logistic mixed regression.
+
+        :param str rootVA: Variant annotation path to store result of logistic mixed regression.
+
+        :param bool runAssoc: Should GWAS be performed in addition to null model estimation
+
+        :param double phi: Genetic additive variance coefficient
+
+        :param double c: Fixed effect variance coefficient
+        :param str optMethod: Optimisation method for solving a system of linear equations (Direct / LBFGS / SGD)
+
+        :return: Variant dataset with logistic mixed model annotations.
+        :rtype: :py:class:`.VariantDataset`
+
+        """
+
+        jvds = self._jvdf.logmmreg(y, jarray(Env.jvm().java.lang.String, cov), rootGA, rootVA, runassoc, phi, c,
+                                   optMethod)
+        return VariantDataset(self.hc, jvds)
+
+    @handle_py4j
     def samples_table(self):
         """Convert samples and sample annotations to KeyTable.
 
@@ -5691,5 +5740,6 @@ class VariantDataset(HistoryMixin):
         jkt = self._jvds.makeKT(variant_expr, genotype_expr,
                                 jarray(Env.jvm().java.lang.String, wrap_to_list(key)), separator)
         return KeyTable(self.hc, jkt)
+
 
 vds_type.set(VariantDataset)
