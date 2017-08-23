@@ -145,6 +145,7 @@ object LinearMixedRegression {
     }
 
     if (runAssoc) {
+
       val sc = assocVds.sparkContext
       val sampleMaskBc = sc.broadcast(sampleMask)
       val completeSampleIndexBc = sc.broadcast(completeSampleIndex)
