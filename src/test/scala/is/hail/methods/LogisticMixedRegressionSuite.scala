@@ -13,8 +13,8 @@ import org.testng.annotations.Test
   */
 class LogisticMixedRegressionSuite extends SparkSuite {
 
-  val SampleData = hc.read("SampleData.vds").annotateGenotypesExpr("g = g.GT.toGenotype()").toVDS
-  val annotations = hc.importTable(input = "samp.annot1", keyNames = Array("ID_1"), types = Map("pheno1" -> TFloat64, "cov2" -> TFloat64, "cov3" -> TFloat64))
+  val SampleData = hc.read("src/test/resources/LogitMM.vds").annotateGenotypesExpr("g = g.GT.toGenotype()").toVDS
+  val annotations = hc.importTable(input = "src/test/resources/LogitMM.annot1", keyNames = Array("ID_1"), types = Map("pheno1" -> TFloat64, "cov2" -> TFloat64, "cov3" -> TFloat64))
   val vds_result = SampleData.annotateSamplesTable(annotations, root = "sa.phenotypes")
   val covExpr = Array("sa.phenotypes.cov2 ", "sa.phenotypes.cov3 ")
 
