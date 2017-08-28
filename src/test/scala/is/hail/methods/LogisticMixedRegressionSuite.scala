@@ -11,6 +11,7 @@ import org.testng.annotations.Test
 /**
   * Created by ttasa on 17/08/2017.
   */
+
 class LogisticMixedRegressionSuite extends SparkSuite {
 
   val SampleData = hc.read("src/test/resources/LogitMM.vds").annotateGenotypesExpr("g = g.GT.toGenotype()").toVDS
@@ -21,7 +22,7 @@ class LogisticMixedRegressionSuite extends SparkSuite {
   @Test def logmmLBFGSTest {
     //  val X_ae = hc.importGen("gen.gen","samp.samp").write("SampleData.vds")
 
-    val vds2 = vds_result.logmmreg("sa.phenotypes.pheno1 ", covExpr, "global.logmmreg", "va.logmmreg", optMethod = "LBFGS", c = 1, phi = 0.007)
+    val vds2 = vds_result.logmmreg("sa.phenotypes.pheno1 ", covExpr, "global.logmmreg", "va.logmmreg", optMethod = "LBFGS", c = 1.0, phi = 0.007)
     val DT = vds2.queryGlobal("global.logmmreg.beta").asInstanceOf[Tuple2[String, Map[String, Double]]]._2
     val vec = DT.values.map(_.toDouble).asInstanceOf[List[Double]]
     assert(D_==(vec(0), 0.50611, tolerance = 1e-4))
