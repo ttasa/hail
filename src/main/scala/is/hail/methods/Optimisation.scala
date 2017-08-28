@@ -17,8 +17,8 @@ object Optimisation {
   /**
     *Optimisation
     */
-  val numIterations = 500
-  val stepSize = 0.0005
+  val numIterations = 1000
+  val stepSize = 0.5
   val numCorrections = 200
   val convergenceTol = 1e-5
   val maxNumIterations = 1000
