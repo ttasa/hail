@@ -1,7 +1,7 @@
 package is.hail.methods
 
 import is.hail.HailContext
-import is.hail.distributedmatrix.{BlockMatrixIsDistributedMatrix, DistributedMatrix}
+import is.hail.distributedmatrix.DistributedMatrix
 import BlockMatrixMultiplyRDD.BlockMatrixIsDistributedMatrix
 import is.hail.stats.RegressionUtils
 import is.hail.utils._

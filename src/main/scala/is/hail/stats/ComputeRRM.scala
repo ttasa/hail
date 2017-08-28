@@ -122,5 +122,6 @@ object ToNormalizedDenseMatrix {
     val flattened = rows.collect().flatten
     val m = rows.count().toInt
     new DenseMatrix[Double](n, m, flattened)
+
   }
 }
